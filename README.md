@@ -1,11 +1,28 @@
 # 代码检查 Agent（cppcheck + Agent 扩展）
 
-一个把 **cppcheck 静态分析**封装成 **Agent 可调用工具**的可扩展代码检查框架，并通过
-Claude Code 的自定义命令 `/check` 实现 **「检查 → 解析 JSON → 自主修复 → 重检查」** 的闭环。
+一个把 **C/C++ 静态分析**封装成 **Agent 可调用工具**的可扩展代码检查框架：多检查引擎结果
+归一到同一 JSON 契约，并通过 Claude Code 实现 **「检查 → 解析 JSON → 自主修复 → 重检查」** 的闭环。
 
 本项目同时落地两个题目：
-- **第 3 题（扩展 Agent 控制功能）**：自定义命令调用一个返回 JSON 的程序，Agent 解析后执行后续动作。
+- **第 3 题（扩展 Agent 控制功能）**：自定义命令/MCP 工具调用一个返回 JSON 的程序，Agent 解析后执行后续动作。
 - **第 1 题（cppcheck 套件）**：cppcheck 检查、AI 生成 coding rule、AI 生成测试用例、基于 cppcheck 的可扩展检查框架。
+
+## ✨ 特性总览
+
+- 🔍 **三检查引擎**：cppcheck（核心，免编译）+ clang-tidy（Clang AST 级）+ 自定义正则规则，
+  另可选启用 cppcheck 的 MISRA addon —— 结果合并到**同一 JSON 契约**。
+- 🧩 **可扩展框架**：插件接口 + 注册表 + 配置驱动，加新检查器只需「一个插件文件 + 一行注册」，主流程零改动。
+- 🤖 **三种 Agent 接入形态**：① CLI 脚本 `run_check.py` ② 打包 `run_check.exe` ③ **MCP 标准工具** `check_code`。
+- 🔁 **自主修复闭环**：Claude Code `/check --fix` 实现 检查→修复→重检查，带最大轮数与 human-in-the-loop 护栏。
+- 📐 **AI 生成编码规范**：MISRA C:2012 + 常见规则，并映射到具体检查能力。
+- ✅ **测试驱动**：每条规则反例/正例 + 回归 runner（含三引擎合并用例），**8/8 通过**。
+
+| 能力 | 入口 |
+|------|------|
+| 编码规范文档 | [checker/rules/coding_rules.md](checker/rules/coding_rules.md) |
+| 可扩展框架 / 如何加检查器 | [checker/plugins/README.md](checker/plugins/README.md) |
+| Agent 接入（自定义命令 / MCP） | [.claude/commands/check.md](.claude/commands/check.md) · [mcp_server/README.md](mcp_server/README.md) |
+| JSON 契约 | [checker/json_schema.md](checker/json_schema.md) |
 
 ---
 
