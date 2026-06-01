@@ -93,8 +93,17 @@ def summarize(findings: List[Finding]) -> dict:
 
 def build_result(target: str, findings: List[Finding], config: dict) -> dict:
     # 按严重级、文件、行号排序，输出可预测
-    # 归一化文件路径为正斜杠，保证不同检查器输出风格一致（Agent 解析更稳）
+    # 归一化文件路径：不同检查器风格不一（clang-tidy 报绝对路径，cppcheck 报相对路径）。
+    # 统一为相对 cwd 的正斜杠路径，保证 Agent 解析时同一文件的标识一致。
+    cwd = os.getcwd()
     for f in findings:
+        if os.path.isabs(f.file):
+            try:
+                rel = os.path.relpath(f.file, cwd)
+                if not rel.startswith(".."):
+                    f.file = rel
+            except ValueError:
+                pass  # 跨盘符等无法相对化时保留原值
         f.file = f.file.replace("\\", "/")
     order = {s: i for i, s in enumerate(SEVERITY_ORDER)}
     findings_sorted = sorted(findings, key=lambda f: (order.get(f.severity, 99), f.file, f.line))

@@ -24,10 +24,12 @@ RUN_CHECK = os.path.join(ROOT, "checker", "run_check.py")
 EXPECT = os.path.join(ROOT, "tests", "expectations.json")
 
 
-def run_checker(target: str) -> dict:
+def run_checker(target: str, config: str | None = None) -> dict:
+    cmd = [sys.executable, RUN_CHECK, target]
+    if config:
+        cmd += ["--config", config]
     proc = subprocess.run(
-        [sys.executable, RUN_CHECK, target],
-        capture_output=True, text=True, encoding="utf-8", cwd=ROOT,
+        cmd, capture_output=True, text=True, encoding="utf-8", cwd=ROOT,
     )
     try:
         return json.loads(proc.stdout)
@@ -43,14 +45,16 @@ def main() -> int:
     failed = 0
     for case in spec["cases"]:
         target = case["file"]
-        result = run_checker(target)
+        result = run_checker(target, case.get("config"))
         if result.get("_parse_error"):
             print(f"[FAIL] {target}: 检查器输出不是合法 JSON")
             print(result.get("stderr", "")[:500])
             failed += 1
             continue
 
-        ids = {f["id"] for f in result.get("findings", [])}
+        findings = result.get("findings", [])
+        ids = {f["id"] for f in findings}
+        checkers = {f["checker"] for f in findings}
         ok = True
         reasons = []
         for must in case.get("must_contain", []):
@@ -61,6 +65,10 @@ def main() -> int:
             if forbid in ids:
                 ok = False
                 reasons.append(f"误报了不应检出的规则 '{forbid}'")
+        for ck in case.get("must_contain_checker", []):
+            if ck not in checkers:
+                ok = False
+                reasons.append(f"结果中未出现检查器 '{ck}'（实际: {sorted(checkers)}）")
 
         if ok:
             print(f"[PASS] {target}")

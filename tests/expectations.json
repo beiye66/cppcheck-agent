@@ -7,6 +7,9 @@
     { "file": "tests/samples/var1_uninit_bad.c",   "must_contain": ["uninitvar"] },
     { "file": "tests/samples/ari1_zerodiv_bad.c",  "must_contain": ["zerodiv"] },
     { "file": "tests/samples/ctrl1_goto_bad.c",    "must_contain": ["no-goto"] },
-    { "file": "tests/samples/api2_unsafe_bad.c",   "must_contain": ["unsafe-func"] }
+    { "file": "tests/samples/api2_unsafe_bad.c",   "must_contain": ["unsafe-func"] },
+    { "file": "tests/samples/var1_uninit_bad.c",   "config": "checker/config.full.json",
+      "must_contain_checker": ["cppcheck", "clang-tidy"],
+      "_note": "三引擎合并：同一文件被 cppcheck 与 clang-tidy 同时检查并合并到一份结果" }
   ]
 }

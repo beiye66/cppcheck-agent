@@ -1,0 +1,37 @@
+{
+  "_comment": "三引擎全量配置：cppcheck + custom-regex + clang-tidy。用法: python run_check.py <target> --config checker/config.full.json",
+  "enabled_checkers": ["cppcheck", "custom-regex", "clang-tidy"],
+  "fail_on": ["error", "warning"],
+
+  "cppcheck": {
+    "enable": "warning,style,performance,portability",
+    "std": "c11",
+    "timeout": 120,
+    "includes": [],
+    "rule_file": null,
+    "misra_addon": null
+  },
+
+  "clang-tidy": {
+    "checks": "clang-analyzer-*,bugprone-*,cert-*",
+    "std": "c11",
+    "timeout": 120,
+    "includes": []
+  },
+
+  "custom_regex": {
+    "enabled": true,
+    "rules": [
+      {
+        "id": "no-goto", "rule": "CTRL-1", "severity": "warning",
+        "pattern": "(^|[^A-Za-z0-9_])goto\\s",
+        "message": "禁止使用 goto（MISRA Rule 15.1）。"
+      },
+      {
+        "id": "unsafe-func", "rule": "API-2", "severity": "warning",
+        "pattern": "(^|[^A-Za-z0-9_])(gets|strcpy|strcat|sprintf)\\s*\\(",
+        "message": "使用了不安全的库函数，建议改用带长度限制的安全版本。"
+      }
+    ]
+  }
+}
