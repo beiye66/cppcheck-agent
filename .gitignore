@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# PyInstaller 构建产物（可由 build_exe.ps1 复现）
+build/
+dist/
+*.spec
+
+# 检查报告：忽略运行时生成的，保留 README 引用的示例报告
+reports/last_check.md
+
+# 本地 Claude 配置（个人机器特定，不入库）
+.claude/settings.local.json
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

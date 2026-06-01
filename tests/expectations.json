@@ -1,0 +1,12 @@
+{
+  "_comment": "测试期望清单：每个样例文件应/不应检出哪些规则 id。test runner 据此断言。",
+  "cases": [
+    { "file": "tests/samples/mem1_memleak_bad.c",  "must_contain": ["memleak"] },
+    { "file": "tests/samples/mem1_memleak_good.c", "must_not_contain": ["memleak"] },
+    { "file": "tests/samples/ptr2_oob_bad.c",      "must_contain": ["arrayIndexOutOfBounds"] },
+    { "file": "tests/samples/var1_uninit_bad.c",   "must_contain": ["uninitvar"] },
+    { "file": "tests/samples/ari1_zerodiv_bad.c",  "must_contain": ["zerodiv"] },
+    { "file": "tests/samples/ctrl1_goto_bad.c",    "must_contain": ["no-goto"] },
+    { "file": "tests/samples/api2_unsafe_bad.c",   "must_contain": ["unsafe-func"] }
+  ]
+}

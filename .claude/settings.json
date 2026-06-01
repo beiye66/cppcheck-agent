@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python checker/run_check.py:*)",
+      "Bash(python checker/run_tests.py:*)"
+    ]
+  }
+}
