@@ -18,6 +18,7 @@ Claude Code (Agent 大脑)
 checker/run_check.py  (被调用的"exe"，可 pyinstaller 打包)
    │  调度已注册的检查器插件
    ├── CppcheckChecker     → 调 cppcheck，解析 XML
+   ├── ClangTidyChecker    → 调 clang-tidy，解析诊断（基于 Clang AST，需 LLVM）
    └── CustomRegexChecker  → 正则规则（goto/魔法数字/不安全函数…）
    │  合并 + 归一化
    ▼
@@ -41,14 +42,16 @@ code-check-agent/
 │   └── README.md              # MCP 接入说明与对比
 ├── checker/
 │   ├── run_check.py           # 检查器主程序（编排 + JSON 输出）
-│   ├── config.json            # 默认配置（启停检查器、规则集）
+│   ├── config.json            # 默认配置（cppcheck + custom-regex）
 │   ├── config.misra.json      # 启用 MISRA addon 的配置档
+│   ├── config.full.json       # 三引擎（+clang-tidy）的配置档
 │   ├── json_schema.md         # JSON 输出契约（Agent 解析接口）
 │   ├── rules/coding_rules.md  # AI 生成的编码规范（MISRA + 常见，第1题）
 │   ├── addons/                # cppcheck 官方 MISRA addon（misra.py 等）
 │   └── plugins/               # 可扩展检查框架
 │       ├── base.py            #   Checker 接口 + Finding + 注册表
 │       ├── cppcheck_checker.py
+│       ├── clangtidy_checker.py  # 第二个检查引擎（演示插件扩展）
 │       ├── custom_regex_checker.py
 │       └── README.md          #   如何新增检查器
 ├── tests/
@@ -69,6 +72,9 @@ python checker/run_check.py --list-checkers
 
 # 启用 MISRA addon
 python checker/run_check.py <target> --config checker/config.misra.json
+
+# 三引擎全量检查（cppcheck + clang-tidy + custom-regex，需已装 LLVM）
+python checker/run_check.py <target> --config checker/config.full.json
 
 # 跑回归测试（验证规则落地）
 python tests/run_tests.py
@@ -107,9 +113,25 @@ MCP 接入的设计与对比见 [mcp_server/README.md](mcp_server/README.md)。
 
 修复后报告见 [reports/loop_demo_after.md](reports/loop_demo_after.md)。
 
-### 4.3 回归测试
+### 4.3 三引擎合并（cppcheck + clang-tidy + custom-regex）
 
-`python tests/run_tests.py` → **7/7 通过**：每条规则的反例都被正确检出，正例不误报。
+用 `config.full.json` 对 demo_bad.c 检查，三个检查器结果合并到**同一份 JSON 契约**（共 12 项），
+体现互补：同一处问题被不同引擎从不同角度印证。完整报告见
+[reports/demo_bad_full.md](reports/demo_bad_full.md)。
+
+| 文件:行 | cppcheck | clang-tidy | custom-regex |
+|---------|----------|-----------|--------------|
+| :11 越界 | arrayIndexOutOfBounds | clang-analyzer-security.ArrayBound | — |
+| :12 strcpy | bufferAccessOutOfBounds | insecureAPI.strcpy | unsafe-func |
+| :18 未初始化 | uninitvar | core.UndefinedBinaryOperatorResult | — |
+| :19 goto | — | — | no-goto |
+
+这验证了框架的可扩展性：**新增 clang-tidy 检查器只加了一个插件文件 + 一行注册，主流程零改动**。
+
+### 4.4 回归测试
+
+`python tests/run_tests.py` → **8/8 通过**：每条规则的反例都被正确检出、正例不误报，
+并含一条"三引擎合并"用例（验证同一文件被 cppcheck 与 clang-tidy 同时检查并合并）。
 
 ## 5. 整个过程考虑了哪些问题
 
@@ -131,7 +153,7 @@ MCP 接入的设计与对比见 [mcp_server/README.md](mcp_server/README.md)。
 
 ## 6. 最终框架包含的内容
 
-- **检查引擎层**：cppcheck（核心静态分析）+ 官方 MISRA addon + 自定义正则检查器。
+- **检查引擎层**：cppcheck（核心静态分析）+ 官方 MISRA addon + clang-tidy（Clang AST 级分析）+ 自定义正则检查器。
 - **框架层**：统一 `Checker` 插件接口、`Finding` 数据模型、检查器注册表、配置驱动的规则集、
   统一 JSON 契约、Markdown 报告生成、自省（`--list-checkers`）。
 - **规范层**：AI 生成的 C 编码规范文档（MISRA + 常见规则），并映射到具体检查能力。

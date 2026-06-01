@@ -3,9 +3,10 @@
 > 本规范由 AI 辅助整理，融合 **MISRA C:2012** 的代表性规则与业界常见 C 编码规范
 > （CERT C、Linux kernel style、Google C++ 部分适用于 C 的条目等）。
 >
-> 每条规则标注：**编号 / 类别 / 严重级 / 检查方式**。检查方式分三类：
+> 每条规则标注：**编号 / 类别 / 严重级 / 检查方式**。检查方式分四类：
 > - `cppcheck` —— cppcheck 原生能检测（给出对应 id）
 > - `misra-addon` —— 由 cppcheck 的 MISRA addon (`addons/misra.py`) 检测
+> - `clang-tidy` —— 由 LLVM clang-tidy 检测（基于 Clang AST，偏编译级，含 bugprone/cert 等）
 > - `custom-regex` —— 由本框架的自定义正则检查器检测（规则定义在 `config.json`）
 >
 > 这种"规则 → 检查能力"的映射，正是把"编码规范"落地成"自动化检查"的关键。
@@ -83,7 +84,10 @@
 2. **MISRA addon** 覆盖 MISRA C:2012 的结构化/类型/可移植性规则。启用方式：在 `config.json`
    的 `cppcheck.misra_addon` 填入 `checker/addons/misra.py` 的路径（规则原文受版权保护，
    addon 仅按规则编号报告）。
-3. **custom-regex** 覆盖 cppcheck 难以静态判断、但靠文本模式可识别的规范（goto、魔法数字、
+3. **clang-tidy** 基于 Clang AST 做编译级分析，与 cppcheck 互补，擅长 bugprone（易错模式）、
+   cert（CERT C 安全编码）、modernize 等检查。用 `config.full.json` 启用三引擎；其结果与
+   cppcheck/custom-regex 合并到同一 JSON 契约。
+4. **custom-regex** 覆盖 cppcheck 难以静态判断、但靠文本模式可识别的规范（goto、魔法数字、
    命名、Tab 缩进等）。新增规范只需在 `config.json` 的 `custom_regex.rules` 加一条，**无需改代码**。
 
 > 设计取舍：能交给静态分析器精确判断的（内存/越界）交给 cppcheck；只能近似判断的（魔法数字）
