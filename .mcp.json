@@ -1,0 +1,9 @@
+{
+  "_comment": "Claude Code 项目级 MCP server 注册。在本目录启动 claude 后，check_code 工具即可用。",
+  "mcpServers": {
+    "cppcheck-agent": {
+      "command": "python",
+      "args": ["mcp_server/server.py"]
+    }
+  }
+}

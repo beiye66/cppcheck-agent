@@ -34,6 +34,11 @@ code-check-agent/
 ├── .claude/
 │   ├── commands/check.md      # /check 自定义命令（第3题核心）
 │   └── settings.json          # 预授权运行检查器命令
+├── .mcp.json                  # Claude Code MCP server 注册
+├── mcp_server/
+│   ├── server.py              # MCP server（stdio JSON-RPC，暴露 check_code 工具）
+│   ├── test_mcp.py            # MCP 握手冒烟测试
+│   └── README.md              # MCP 接入说明与对比
 ├── checker/
 │   ├── run_check.py           # 检查器主程序（编排 + JSON 输出）
 │   ├── config.json            # 默认配置（启停检查器、规则集）
@@ -69,11 +74,16 @@ python checker/run_check.py <target> --config checker/config.misra.json
 python tests/run_tests.py
 ```
 
-在 **Claude Code** 里（于本目录启动）：
+在 **Claude Code** 里（于本目录启动），两种接入方式：
 ```
+# 方式 A：自定义命令
 /check tests/samples/demo_bad.c          # 只检查 + 汇报 + 给修复建议
 /check tests/samples/loop_demo.c --fix   # 进入自主修复闭环（最多 5 轮）
+
+# 方式 B：MCP 工具（.mcp.json 已注册，模型可自动调用 check_code）
+python mcp_server/test_mcp.py            # 不需客户端，冒烟测试 MCP server
 ```
+MCP 接入的设计与对比见 [mcp_server/README.md](mcp_server/README.md)。
 
 ## 4. 检查结果与报告
 
