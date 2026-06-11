@@ -9,7 +9,7 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - uses: beiye66/LogicGuard-PR@main   # 直接引用本 Action，无需拷贝代码
+      - uses: beiye66/LogicGuard-PR@v1.0.0   # 直接引用本 Action，无需拷贝代码
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}   # Actions 自动提供，无需手动配置
           llm-api-key: ${{ secrets.LLM_API_KEY }}
